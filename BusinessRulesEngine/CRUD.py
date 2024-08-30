@@ -70,27 +70,79 @@ def list_rules():
         print('Nenhuma regra encontrada.')
 
 
+def execute_rules(context):
+    # Recupera todas as regras do banco de dados
+    rules = rules_collection.find({})
+
+    for rule in rules:
+        condition = rule['condition']
+        action = rule['action']
+
+        # Verifica se a condição, fornecida como uma string, é verdadeira dentro do contexto definido
+        # - condition: A condição a ser avaliada, passada como uma string.
+        # - {}: Escopo global vazio, para evitar acesso a variáveis globais.
+        # - context: Dicionário que define o escopo local, onde as variáveis e funções usadas na condição estão definidas.
+        if eval(condition, {}, context):
+            # Avalia e executa a ação, também fornecida como uma string, dentro do mesmo contexto
+            # - action: A ação a ser executada.
+            eval(action, {}, context)
+
+
+
 #
 # Exemplo de uso das funções
 #
 if __name__ == "__main__":
+    # ----------------------------
     # Cria novas regras
+    # 
     create_new_rule('Regra de Desconto', 'order_amount > 1000', 'apply_discount(10)')
     create_new_rule('Frete Grátis', 'customer_loyalty > 5', 'apply_free_shipping()')
     print('')
 
+    # ----------------------------
     # Edita uma regra existente
+    # 
     edit_rule('Regra de Desconto', new_condition='order_amount > 1500')
     print('')
 
+    # ----------------------------
     # Lista todas as regras
+    # 
     print('\n\nRegras:')
     list_rules()
     print('')
 
+    # ----------------------------
+    # Executa
+    # 
+    # Funções que podem ser chamadas pelas regras
+    def apply_discount(percentage):
+        print(f'Aplicando desconto de {percentage}%')
+
+    def apply_free_shipping():
+        print('Aplicando frete grátis')
+
+    # Contexto para a execução das regras
+    context = {
+        'order_amount': 2000,
+        'customer_loyalty': 6,
+        'apply_discount': apply_discount,   # Inclui a função no contexto
+        'apply_free_shipping': apply_free_shipping  # Inclui a função no contexto
+    }  
+
+    # Executa as regras no contexto dado
+    print('\n\nExecutando regras:')
+    execute_rules(context)
+    print('')
+
+    # ----------------------------
     # Deleta uma regra
+    # 
     delete_rule('Frete Grátis')
 
+    # ----------------------------
     # Lista todas as regras após a deleção
+    # 
     print('\n\nRegras pós deleção:')
     list_rules()
